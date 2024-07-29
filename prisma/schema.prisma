@@ -11,10 +11,133 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
-model users {
-  id        Int      @id @default(autoincrement())
+model User {
+  userId    Int       @id @default(autoincrement())
   name      String
-  email     String   @unique
-  image     String
+  username  String    @unique
+  password  String
+  email     String    @unique
+  role      String
+  athletes  Athlete[]
+  teams     Team[]    @relation("CoachTeams")
   createdAt DateTime @default(now())
+}
+
+model Athlete {
+  athleteId    Int           @id @default(autoincrement())
+  name         String
+  dateOfBirth  DateTime
+  gender       String
+  teamId       Int
+  team         Team          @relation(fields: [teamId], references: [teamId])
+  eventResults EventResult[]
+  User         User?         @relation(fields: [userUserId], references: [userId])
+  userUserId   Int?
+  createdAt    DateTime @default(now())
+}
+
+model Team {
+  teamId     Int         @id @default(autoincrement())
+  teamName   String
+  coachId    Int
+  coach      User        @relation("CoachTeams", fields: [coachId], references: [userId])
+  athletes   Athlete[]
+  matchTeams MatchTeam[]
+  groupTeams GroupTeam[]
+  createdAt  DateTime @default(now())
+}
+
+model Tournament {
+  tournamentId   Int      @id @default(autoincrement())
+  tournamentName String
+  location       String
+  startDate      DateTime
+  endDate        DateTime
+  events         Event[]
+  groups         Group[]
+  createdAt      DateTime @default(now())
+}
+
+model EventCategory {
+  categoryId   Int         @id @default(autoincrement())
+  categoryName String
+  eventTypes   EventType[]
+  createdAt    DateTime @default(now())
+}
+
+model EventType {
+  eventTypeId   Int           @id @default(autoincrement())
+  eventTypeName String
+  categoryId    Int
+  category      EventCategory @relation(fields: [categoryId], references: [categoryId])
+  events        Event[]
+  createdAt     DateTime @default(now())
+}
+
+model Event {
+  eventId      Int           @id @default(autoincrement())
+  eventName    String
+  tournamentId Int
+  tournament   Tournament    @relation(fields: [tournamentId], references: [tournamentId])
+  eventTypeId  Int
+  eventType    EventType     @relation(fields: [eventTypeId], references: [eventTypeId])
+  eventDate    DateTime
+  eventTime    DateTime
+  eventResults EventResult[]
+  matches      Match[]
+  createdAt    DateTime @default(now())
+}
+
+model EventResult {
+  resultId    Int     @id @default(autoincrement())
+  eventId     Int
+  event       Event   @relation(fields: [eventId], references: [eventId])
+  athleteId   Int
+  athlete     Athlete @relation(fields: [athleteId], references: [athleteId])
+  performance String
+  position    Int
+  createdAt   DateTime @default(now())
+}
+
+model Match {
+  matchId    Int         @id @default(autoincrement())
+  eventId    Int
+  event      Event       @relation(fields: [eventId], references: [eventId])
+  matchDate  DateTime
+  matchTime  DateTime
+  matchTeams MatchTeam[]
+  groupId    Int?
+  group      Group?      @relation(fields: [groupId], references: [groupId])
+  createdAt  DateTime @default(now())
+}
+
+model MatchTeam {
+  matchTeamId Int    @id @default(autoincrement())
+  matchId     Int
+  match       Match  @relation(fields: [matchId], references: [matchId])
+  teamId      Int
+  team        Team   @relation(fields: [teamId], references: [teamId])
+  performance String
+  score       Int?
+  position    Int
+  createdAt   DateTime @default(now())
+}
+
+model Group {
+  groupId      Int         @id @default(autoincrement())
+  groupName    String
+  tournamentId Int
+  tournament   Tournament  @relation(fields: [tournamentId], references: [tournamentId])
+  groupTeams   GroupTeam[]
+  matches      Match[]
+  createdAt    DateTime @default(now())
+}
+
+model GroupTeam {
+  groupTeamId Int   @id @default(autoincrement())
+  groupId     Int
+  group       Group @relation(fields: [groupId], references: [groupId])
+  teamId      Int
+  team        Team  @relation(fields: [teamId], references: [teamId])
+  createdAt   DateTime @default(now())
 }
